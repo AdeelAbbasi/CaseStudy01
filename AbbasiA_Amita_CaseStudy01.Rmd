@@ -21,11 +21,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library('dplyr')
 library('ggplot2')
-```
+library('kableExtra')
+library('grid')
+# Load the CSV files into a variable
 
-Load the CSV files into a variable
-
-```{r}
 
 Breweries <- read.csv("Breweries.csv")
 Beers     <- read.csv("Beers.csv")
@@ -35,6 +34,9 @@ Beers     <- read.csv("Beers.csv")
 names(Breweries)[2] <- 'Brewery Name'
 names(Beers)[1] <- 'Beer Name'
 
+data <- Breweries %>% group_by(State) %>% summarize(Count = n())
+
+
 ```
 
 Generate the plot, group by state
@@ -42,27 +44,39 @@ Generate the plot, group by state
 Graph shows the Colorado, Califorina and Michigan has the highest number of Breweries
 
 ```{r}
-
-1. 
-data <- Breweries %>% group_by(State) %>% summarize(Count = n())
+ 
 
 ggplot(data, aes(reorder(State, -Count), Count, label = Count)) + 
   geom_bar(stat = "identity", width = .85, fill=rainbow(51)) +
   theme(axis.text.x = element_text(angle=90, vjust=0.6), plot.title = element_text(hjust = 0.5))+
   geom_text(size = 2.5, position = position_stack(vjust = 1.18)) + 
   labs(x = 'State', y = 'Count') 
+  grid.text("(Figure 1)", 0.90, 0.90)
+
 
 ```
 
 
-```{r}
+```{r, include=FALSE}
 
 # 2. Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.
 
 MergedData <- merge(Beers, Breweries, by.y = 'Brew_ID', by.x = 'Brewery_id')
 
-head(MergedData[,c('Beer Name', 'ABV', 'IBU', 'Style', 'Brewery Name', 'City', 'State')])
-tail(MergedData[,c('Beer Name', 'ABV', 'IBU', 'Style', 'Brewery Name', 'City', 'State')])
+Data.Head <- head(MergedData[,c('Beer Name', 'ABV', 'IBU', 'Style', 'Brewery Name', 'City', 'State')])
+Data.Tail <- tail(MergedData[,c('Beer Name', 'ABV', 'IBU', 'Style', 'Brewery Name', 'City', 'State')])
+
+
+```
+
+```{r}
+
+# Showing top 6 records from the merged data set
+kable(Data.Head, format = "markdown", padding = 2)
+
+
+# Showing last 6 records from the merged data set
+kable(Data.Tail, format = "markdown", padding = 2)
 
 
 ```
@@ -72,10 +86,15 @@ tail(MergedData[,c('Beer Name', 'ABV', 'IBU', 'Style', 'Brewery Name', 'City', '
 
 # 3.	Report the number of NA's in each column.
 
-data <- sapply(MergedData[!complete.cases(MergedData),],
+Data.NA <- sapply(MergedData[!complete.cases(MergedData),],
        function(y) length(which(is.na(y))))
 
-data
+```
+
+```{r}
+# Show the count for NA's in each column
+
+kable(Data.NA, format = "markdown", padding = 2)
 
 ```
 
@@ -93,52 +112,63 @@ MergedData.Median <-  MergedData[complete.cases((MergedData)),] %>% # Find all t
 ggplot2::ggplot(MergedData.Median, aes(reorder(State, -IBU), IBU, fill=IBU)) + geom_bar(stat = "identity") + 
     theme(axis.text.x = element_text(angle=90, vjust=0.6), plot.title = element_text(hjust = 0.5)) +
     labs(x = 'State', y = 'IBU') 
-
+grid.text("(Figure 2)", 0.80, 0.90)
 
 ggplot2::ggplot(MergedData.Median, aes(reorder(State, -ABV), ABV, fill = ABV)) + geom_bar(stat = "identity") + 
     theme(axis.text.x = element_text(angle=90, vjust=0.6), plot.title = element_text(hjust = 0.5)) + 
     labs(x = 'State', y = 'ABV') 
-
+grid.text("(Figure 3)", 0.80, 0.90)
 
 ```
 
-```{r}
+```{r, include = FALSE}
 
 # 5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
 
 ABV.Max <- MergedData[which.max(MergedData$ABV),]
 IBU.MostBitter <- MergedData[which.max(MergedData$IBU),]
 
-data.frame('Maximum_Alcoholic_Beer' = ABV.Max$State, 'ABV Max' = ABV.Max$ABV, 't' = IBU.MostBitter$State, 'IBU Most' = IBU.MostBitter$IBU)
+Data.Compare <- data.frame('Maximum_Alcoholic_Beer' = ABV.Max$State, 'ABV Max' = ABV.Max$ABV, 'Most_Bitter_State' = IBU.MostBitter$State, 'IBU Most' = IBU.MostBitter$IBU)
+
+names(Data.Compare) <- c('Maximum Alcoholic Beer', 'Max ABV', 'Most Bitter State', 'Most IBU')
 
 ```
-
-
 
 ```{r}
 
-# 6.	Summary statistics for the ABV variable. ????
-
-summary(MergedData$ABV)
+kable(Data.Compare, format = "markdown", padding = 2)
 
 ```
 
+```{r, include=FALSE}
+
+# 6.	Summary statistics for the ABV variable. ????
+
+Data.Summary <- summary(MergedData$ABV)
+
+```
+
+```{r}
+
+Data.Summary 
+
+
+```
 
 ```{r}
 
 # 7.	Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
-MergedData.Median
+# MergedData.Median
 #ggplot2::ggplot(df, aes(x = State,y = value, fill = variable)) +   geom_point(stat = "identity")
 
-plot(MergedData$IBU, MergedData$ABV, pch = 148, col = c('Red', 'Green'), 
-     xlab = "I B U", ylab = "A B V", main = "")
+ plot(MergedData$IBU, MergedData$ABV, pch = 148, col = c('Red', 'Green'), xlab = "I B U", ylab = "A B V", main = "")
+grid.text("(Figure 4)", 0.88, 0.88)
 
 # Examination of this scatter plot and the regression line suggests that there is a positive, linear relationship between `IBU` and `ABV`.
 
 
 ```
-
 
 ## Review and Conclusion
 
