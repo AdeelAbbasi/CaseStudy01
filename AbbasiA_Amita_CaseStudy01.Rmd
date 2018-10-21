@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-```{r , include=FALSE}
+```{r}
 
 library('dplyr')
 library('ggplot2')
@@ -57,7 +57,7 @@ ggplot(data, aes(reorder(State, -Count), Count, label = Count)) +
 ```
 
 
-```{r, include=FALSE}
+```{r}
 
 # 2. Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.
 
@@ -88,6 +88,15 @@ kable(Data.Tail, format = "markdown", padding = 2)
 
 Data.NA <- sapply(MergedData[!complete.cases(MergedData),],
        function(y) length(which(is.na(y))))
+
+library(plotrix)
+slices <- Data.NA[c(4:6) ]
+mytable <- Data.NA[c(4,5,6)]
+mytable[3] <- 5
+lbls <- paste(names(mytable), "-", mytable, sep="")
+pie(mytable, labels = lbls, main="Count of NAs in columns (Values missing)",col=c('pink','SteelBlue','red'))
+
+#pie3D(mytable,labels=lbls,explode=0.1, 	main="Count of NAs in columns (Values missing)")
 
 ```
 
@@ -140,11 +149,14 @@ kable(Data.Compare, format = "markdown", padding = 2)
 
 ```
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 
 # 6.	Summary statistics for the ABV variable. ????
-
 Data.Summary <- summary(MergedData$ABV)
+boxplot(MergedData$ABV, notch=TRUE, 
+  col=(c("gold","darkgreen")),
+  main="Summary Statiscits for ABV Variable", xlab="tbo")
+
 
 ```
 
