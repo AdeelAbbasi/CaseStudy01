@@ -1,14 +1,17 @@
 ---
-title: "Doing Data Science - Case Study 01"
+title: "Case Study01: Study of US Craft Beer and Breweries"
 author: "Adeel & Amita"
 date: "October 13, 2018"
 output: html_document
 ---
-
 ## CASE STUDY 01 - October 18
+## Introduction and Overview
+
+In this report, we explore datasets for various `beers` and the `breweries` that produce them in the US. The steps and procedures taken for this analysis are detailed below. 
 
 ### Description
 
+The initial data provided were in two separate datasets, one each for beers and breweries, which were combined into a single dataset.
 The Beers dataset contains a list of 2410 US craft beers and Breweries dataset contains 558 US breweries. The datasets descriptions are as follows
 
 ```{r setup, include=FALSE}
@@ -18,7 +21,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-
+library(ggplot2)  # Data visualization
+library(readr)    # CSV file I/O, e.g. the read_csv function
+library(dplyr)    # Heavy use of this library
+library(tidyr)
+library(ggthemes) # for themes in ggplot
+library(knitr)
+library(kableExtra) # library to make the document more presentable
 library('dplyr')
 library('ggplot2')
 library('kableExtra')
@@ -38,6 +47,9 @@ data <- Breweries %>% group_by(State) %>% summarize(Count = n())
 
 
 ```
+### 1. How many breweries are present in each state?
+
+We answer this question by retrieving the value of `State` from the `Breweries` data.
 
 Generate the plot, group by state
 
@@ -56,6 +68,9 @@ ggplot(data, aes(reorder(State, -Count), Count, label = Count)) +
 
 ```
 
+### 2. Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.
+
+As part of our analysis, we ensured that duplicate data within each dataset shared the same variable name in both sets. We can now merge them into a single dataset, using `full_join`.
 
 ```{r}
 
@@ -81,7 +96,11 @@ kable(Data.Tail, format = "markdown", padding = 2)
 
 ```
 
+### 3. Report the number of NA’s in each column.
 
+To do this, we use a function (which returns `true` if a given value is NA, `false` otherwise, using `is.na`) and `sapply` to determine the number of missing values for each column within `BrewPub`.
+
+Per the results, we find that there are a total of 62 ABV values missing, and 1005 IBU values missing. No other data is missing.
 ```{r}
 
 # 3.	Report the number of NA's in each column.
@@ -107,6 +126,9 @@ kable(Data.NA, format = "markdown", padding = 2)
 
 ```
 
+### 4. Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare.
+
+We build two new datasets, `Bitter` and `FireWater`, from our `BrewPub` dataset, omitting NA values. We then group the relevant values by state, and summarise by the median of the relevant value.
 
 ```{r}
 
@@ -129,6 +151,11 @@ ggplot2::ggplot(MergedData.Median, aes(reorder(State, -ABV), ABV, fill = ABV)) +
 grid.text("(Figure 3)", 0.80, 0.90)
 
 ```
+### 5. Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
+
+We use `which.max` on our `BrewPub` dataset, seeking specifically the maximum value in the `ABV` and `IBU` columns.
+
+From this, we identify Colorado as having the beer with the highest ABV, at `.128`; and we identify Oregon has having the beer with the highest IBU, at `138`.
 
 ```{r, include = FALSE}
 
@@ -142,6 +169,9 @@ Data.Compare <- data.frame('Maximum_Alcoholic_Beer' = ABV.Max$State, 'ABV Max' =
 names(Data.Compare) <- c('Maximum Alcoholic Beer', 'Max ABV', 'Most Bitter State', 'Most IBU')
 
 ```
+### 6. Summary statistics for the ABV variable.
+
+We do this by calling `summary` on the `ABV` column in our `BrewPub` dataset.
 
 ```{r}
 
@@ -166,20 +196,22 @@ Data.Summary
 
 
 ```
+### 7. Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
 
+We utilize `ggplot` to plot a scatter plot of the data, using `IBU` and `ABV` as our variables.
+
+Examination of this scatter plot and the regression line suggests that there is a positive, linear relationship between `IBU` and `ABV`.
 ```{r}
-
-# 7.	Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
-
-# MergedData.Median
-#ggplot2::ggplot(df, aes(x = State,y = value, fill = variable)) +   geom_point(stat = "identity")
-
- plot(MergedData$IBU, MergedData$ABV, pch = 148, col = c('Red', 'Green'), xlab = "I B U", ylab = "A B V", main = "")
-grid.text("(Figure 4)", 0.88, 0.88)
-
-# Examination of this scatter plot and the regression line suggests that there is a positive, linear relationship between `IBU` and `ABV`.
-
-
+# 7. Draw a scatter plot to compare relationship between beer 
+# bitterness and alcohol content
+ggplot(MergedData, aes(x=MergedData$IBU, y= MergedData$ABV)) +
+  geom_point(shape=1) +
+   geom_smooth(method=lm) + # add linear regression line
+  theme_economist() + 
+  scale_color_economist()+
+  theme(axis.text.x=element_text(size=rel(1.0)))+
+ggtitle("Correlation between IBU and ABV ") +
+  labs(x="IBU",y="ABV")
 ```
 
 ## Review and Conclusion
